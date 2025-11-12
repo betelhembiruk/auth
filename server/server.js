@@ -4,6 +4,7 @@ import 'dotenv/config'
 import cookieParser from 'cookie-parser';
 import { connect } from 'mongoose';
 import connectDB from './config/mongodb.js'; 
+import authRouter from './routes/authRoutes.js';
 
 
 const app = express();
@@ -15,9 +16,8 @@ connectDB();
 app.use(cors({credentials: true}))
 
 
-app.get('/', (req, res) => {
-    res.send('API is running');
-});
+app.get('/', (req, res) =>  res.send('API is running'));
+app.use('/api/auth' , authRouter);
 
 
 app.listen(port, ()=> console.log(`server started on port:${port}`));
