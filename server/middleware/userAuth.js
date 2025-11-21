@@ -1,32 +1,27 @@
 import jwt from 'jsonwebtoken';
-
-
+import userModel from '../models/userModel.js';
 
 const userAuth = async (req, res, next) => {
-
-    const{ token } = req.cookies;
-
-    if (!token) {
-        return res.json({ success: false, message: 'authentication required' });
-    }
     try {
+        const token = req.cookies.token || req.header('Authorization')?.replace('Bearer ', '');
 
-const tokenDecoded = jwt.verify(token, process.env.JWT_SECRET);
+        if (!token) {
+            return res.status(401).json({ success: false, message: 'authentication required' });
+        }
 
-if (tokenDecoded.id) {
-    req.body.userId = tokenDecoded.id}
-    else {
-        return res.json({ success: false, message: 'Not Authorized' });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+
+        const user = await userModel.findById(decoded.id);
+        if (!user) {
+            return res.status(401).json({ success: false, message: 'Not Authorized' });
+        }
+
+        req.user = user;
+
+        next();
+    } catch (error) {
+        return res.status(401).json({ success: false, message: 'invalid token' });
     }
+};
 
-next();
-    }
-
-    catch (error) {
-        return res.json({ success: false, message: 'invalid token' });
-    }   }
-
-
-
-
-    export default userAuth;
+export default userAuth;
