@@ -127,7 +127,7 @@ const Login = () => {
           )}
 
           {state === 'Login' && (
-            <p className="mb-4 text-indigo-500 cursor-pointer text-right">
+            <p onClick={() => navigate('/Reset-Password')} className="mb-4 text-indigo-500 cursor-pointer text-right">
               Forgot Password?
             </p>
           )}

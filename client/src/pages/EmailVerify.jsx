@@ -6,11 +6,12 @@ import axios from 'axios';
 import { AppContext } from '../context/AppContext.jsx';
 
 const EmailVerify = () => {
-    const { backendUrl, getUserData } = useContext(AppContext);
-    const navigate = useNavigate();
-    const inputRefs = useRef([]);
+        axios.defaults.withCredentials = true;
 
-    axios.defaults.withCredentials = true;
+    const { backendUrl, getUserData ,isLoggedIn, userData} = useContext(AppContext);
+    const navigate = useNavigate();
+    const inputRefs = React.useRef([]);
+
 
     const handleInput = (e, index) => {
         if (e.target.value.length > 0 && index < inputRefs.current.length - 1) {
@@ -25,28 +26,39 @@ const EmailVerify = () => {
     };
 
     const handlePaste = (e) => {
-        const pasteData = e.clipboardData.getData("Text").slice(0,6);
-        pasteData.split("").forEach((char, idx) => {
-            if (inputRefs.current[idx]) inputRefs.current[idx].value = char;
-        });
-    };
-
-    const onSubmitHandler = async (e) => {
-        e.preventDefault();
-        const otp = inputRefs.current.map(i => i.value).join('');
-        try {
-            const { data } = await axios.post(`${backendUrl}/api/auth/verify-account`, { otp });
-            if (data.success) {
-                toast.success(data.message);
-                await getUserData();
-                navigate('/');
-            } else {
-                toast.error(data.message);
+        const pasteData = e.clipboardData.getData("Text")
+        const pasteArray = pasteData.split("");
+        pasteArray.forEach((char, index) => {
+            if (inputRefs.current[index]) {
+                inputRefs.current[index].value = char;  
+            
             }
-        } catch (err) {
-            toast.error('Error verifying OTP');
+        });
+    }
+const onSubmitHandler = async (e) => {
+    e.preventDefault();
+    try {
+        const otpArray = inputRefs.current.map(e => e.value);
+        const otp = otpArray.join('');
+
+        const { data } = await axios.post(
+            `${backendUrl}/api/auth/verify-account`,
+            { otp },
+            { withCredentials: true }
+        );
+
+        if (data.success) {
+            toast.success(data.message);
+            await getUserData();
+            navigate('/');
+        } else {
+            toast.error(data.message);
         }
-    };
+    } catch (error) {
+        toast.error(error.message);
+    }
+};
+
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-blue-200 to-purple-400">

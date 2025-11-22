@@ -2,6 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import transporter from '../config/nodemailer.js';
+import { EMAIL_VERIFY_TEMPLATE, PASSWORD_RESET_TEMPLATE } from '../emailTemplates.js';
+
 
 export const register = async (req, res) => {
     const { name, email, password } = req.body;
@@ -124,7 +126,8 @@ export const sendVerifyOtp = async (req, res) => {
             from: process.env.SENDER_EMAIL,
             to: user.email,
             subject: 'Account Verification OTP',
-            text: `Your OTP for account verification is: ${otp}. It is valid for 10 minutes.`,
+            html: EMAIL_VERIFY_TEMPLATE.replace('{{otp}}', otp).replace('{{email}}', user.email),
+       
         };
 
         try {
@@ -143,15 +146,15 @@ export const sendVerifyOtp = async (req, res) => {
     }
 };
 
-
 export const verifyEmail = async (req, res) => {
-    const { userId, otp } = req.body;
-    if (!userId || !otp) {
+    const { otp } = req.body;
+
+    if (!otp) {
         return res.json({ success: false, message: 'missing details' });
     }
 
     try {
-        const user = await userModel.findById(userId);
+        const user = req.user; // <-- already available from userAuth middleware
         if (!user) {
             return res.json({ success: false, message: 'user does not exist' });
         }
@@ -173,7 +176,7 @@ export const verifyEmail = async (req, res) => {
 
     } catch (error) {
         return res.json({ success: false, message: error.message });
-    } 
+    }
 };
 
    export const isAuthenticated = async (req, res) => {
@@ -204,7 +207,7 @@ const mailOptions = {
     from: process.env.SENDER_EMAIL,
     to: user.email, 
     subject: 'Password Reset OTP',
-    text: `Your OTP for password reset is: ${otp}. It is valid for 10 minutes.`,
+    html: PASSWORD_RESET_TEMPLATE.replace('{{otp}}', otp).replace('{{email}}', user.email),
 };
 
 await transporter.sendMail(mailOptions);
@@ -252,6 +255,5 @@ export const resetPassword = async (req, res) => {
         return res.json({ success: false, message: error.message });
     }
 };
-
 
 

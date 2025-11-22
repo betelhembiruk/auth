@@ -10,24 +10,32 @@ const Navbar = () => {
   const { userData, backendUrl, setUserData, setIsLoggedIn } = useContext(AppContext);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
-  axios.defaults.withCredentials = true; // ensure cookies are sent
+  axios.defaults.withCredentials = true;
 
-  // Resend verification OTP
-  const sendVerifyOtp = async () => {
-    try {
-      const { data } = await axios.post(`${backendUrl}/api/auth/send-verify-otp`);
-      if (data.success) {
-        toast.success('Verification email sent.');
-        navigate('/email-verify');
-      } else {
-        toast.error(data.message);
+
+const sendVerifyOtp = async () => {
+  try {
+    const { data } = await axios.post(
+      `${backendUrl}/api/auth/send-verify-otp`,
+      { email: userData.email },
+      {
+        withCredentials: true,
+        headers: { "Content-Type": "application/json" }
       }
-    } catch (err) {
-      toast.error('Error sending OTP');
-    }
-  };
+    );
 
-  // Logout function
+    if (data.success) {
+      toast.success('Verification email sent.');
+      navigate('/email-verify');
+    } else {
+      toast.error(data.message);
+    }
+  } catch (error) {
+    toast.error(error.message);
+  }
+};
+
+ 
   const logout = async () => {
     try {
       const { data } = await axios.post(`${backendUrl}/api/auth/logout`);
